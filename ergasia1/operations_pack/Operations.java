@@ -106,7 +106,7 @@ public class Operations{
       	return total_num;
 	}
 
-	public void get_full_branches(File directory) throws IOException
+	public void get_full_branches(File directory,Myhtml html) throws IOException
 	{
 		Process p=Runtime.getRuntime().exec("git branch -a ",null,directory);
 		InputStreamReader isr= new InputStreamReader(p.getInputStream());
@@ -144,12 +144,14 @@ public class Operations{
       		parts2=last_modified.split(":");
 			System.out.println("LAST MODIFIED :"+parts2[1].replaceAll(" ", ""));
       		p2.destroy();
+
+                  html.add_full_branches(result,parts[1].replaceAll(" ", ""),parts2[1].replaceAll(" ", ""));
 		}
 		p.destroy();
       	return ;
 	}
 
-	public void get_commits(File directory) throws IOException
+	public void get_commits(File directory,Myhtml html) throws IOException
 	{
 		Process p=Runtime.getRuntime().exec("git rev-list HEAD --count ",null,directory);//
 		InputStreamReader isr= new InputStreamReader(p.getInputStream());
@@ -158,6 +160,7 @@ public class Operations{
       	sumof_commits=read.readLine();
 		System.out.println("Sum of commits :"+sumof_commits);
 
+            html.print_sum_commits(sumof_commits);
 
 		Process analytical_commits=Runtime.getRuntime().exec("git rev-list HEAD --all --count ",null,directory);//
 		InputStreamReader com= new InputStreamReader(analytical_commits.getInputStream());
@@ -166,7 +169,7 @@ public class Operations{
       	sumof_analytical_commits=com_read.readLine();
 		System.out.println("Sum of analytical_commits :"+sumof_analytical_commits);
 
-
+            html.start_commits_per_author();
 
 		Process p2=Runtime.getRuntime().exec("git shortlog -sn HEAD ",null,directory);
 		InputStreamReader isr2= new InputStreamReader(p2.getInputStream());
@@ -180,10 +183,14 @@ public class Operations{
 			String f=parts[0].replaceAll(" ", "");
 			float percentage=Float.parseFloat(f)/Float.parseFloat(sumof_commits);
 			System.out.println(Float.toString(percentage)+"\t"+parts[1]);
+
+                  html.add_commits_per_author(parts[1],Float.toString(percentage*100));
 		}
 		p.destroy();
 		p2.destroy();
 
+            html.end_table();
+            html.start_commits_per_branch();
 		System.out.println("Percentage of commits per branch :");
 
 		Process p3=Runtime.getRuntime().exec("git branch -a",null,directory);
@@ -201,11 +208,17 @@ public class Operations{
       		System.out.println("Returned "+result4+" commits");
       		float percentage=Float.parseFloat(result4)/Float.parseFloat(sumof_analytical_commits);
       		System.out.println(Float.toString(percentage)+"\t"+result3);
+
+                  html.add_commits_per_branch(result3,Float.toString(percentage*100));
       		p4.destroy();
       	}	
       	p3.destroy();
+
+            html.end_table();
+            html.start_commits_per_branch_per_author();
  		System.out.println("Percentage of commits per branch per author:");
  		
+
  		Process p5=Runtime.getRuntime().exec("git branch -a",null,directory);
       	InputStreamReader isr5= new InputStreamReader(p5.getInputStream());
       	BufferedReader read5=new BufferedReader(isr5);
@@ -215,6 +228,7 @@ public class Operations{
       		if(result5.startsWith("*")||result5.contains("->"))
 				continue;
 			System.out.println("Branch :"+result5);
+                  html.add_commits_per_branch_per_author_addbranch(result5);
 			//get num of commits on specific branch
 			Process p6=Runtime.getRuntime().exec("git rev-list HEAD --count "+result5,null,directory);//git rev-list --count --no-merges
       		InputStreamReader isr6= new InputStreamReader(p6.getInputStream());
@@ -234,18 +248,23 @@ public class Operations{
 				String f=parts2[0].replaceAll(" ", "");
 				float percentage=Float.parseFloat(f)/Float.parseFloat(commits_of_branch);
 				System.out.println(Float.toString(percentage)+"\t"+parts2[1]);
+
+                        html.add_commits_per_branch_per_author(parts2[1],Float.toString(percentage*100));
 			}
 			p7.destroy();
       	}	
       	p5.destroy();
+
+            html.end_table();
 	}
 
-	public void get_percentage_changes(File directory) throws IOException
+	public void get_percentage_changes(File directory,Myhtml html) throws IOException
 	{
 		Process p1=Runtime.getRuntime().exec("git shortlog HEAD  -s -n",null,directory);
       	InputStreamReader isr1= new InputStreamReader(p1.getInputStream());
       	BufferedReader read1=new BufferedReader(isr1);
       	String author;
+            html.start_lines_average();
       	while((author=read1.readLine())!=null)
       	{
       		String[] parts2;
@@ -301,11 +320,14 @@ public class Operations{
 	      	int gpa=((added/commits)+(deleted/commits))/2;
 	      	System.out.println("Average of both in each commit: "+gpa);
 	      	p.destroy();
+
+                  html.add_lines_average(author,Integer.toString(gpa));
       	}	
+            html.end_table();
       	return ;
 	}
 
-	public void get_commit_statistics_per_author(File directory,String dirname) throws IOException
+	public void get_commit_statistics_per_author(File directory,Myhtml html) throws IOException
 	{
 		Process p=Runtime.getRuntime().exec("git shortlog -sn HEAD ",null,directory);
 		InputStreamReader isr= new InputStreamReader(p.getInputStream());
@@ -313,6 +335,7 @@ public class Operations{
 		String result2;
 		String[] parts;
 		System.out.println("Percentage of commits per author :");
+            html.start_commiter_statistics();
       	while((result2=read.readLine())!=null)
       	{
 			parts=result2.split("\t");
@@ -383,8 +406,10 @@ public class Operations{
       			commits_per_day=Float.parseFloat(f)/(float)days;
 
       		System.out.println("Average per year :"+commits_per_year+" per month:" + commits_per_month+" per day:"+commits_per_day);
+                  html.add_commiter_statistics(parts[1],Float.toString(commits_per_day),Float.toString(commits_per_year),Float.toString(commits_per_month));
 
 		}
+            html.end_table();
 		p.destroy();
 
 	}
