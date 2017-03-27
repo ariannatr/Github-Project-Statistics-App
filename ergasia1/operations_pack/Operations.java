@@ -24,14 +24,15 @@ public class Operations{
       			total_num+=get_files_num(f);
       		else
       			total_num++;
-      	}
-    	total_files=total_num;*/
+      	}*/
+    	total_files=total_num;
     	Process p=Runtime.getRuntime().exec("git ls-files ",null,directory);
       	InputStreamReader isr= new InputStreamReader(p.getInputStream());
       	BufferedReader read=new BufferedReader(isr);
       	String result;
       	while((result=read.readLine())!=null)
       	{  
+      		System.out.println("File: "+result);
       		total_num++;	
       	}	
       	System.out.println("Files "+total_num);
@@ -258,7 +259,7 @@ public class Operations{
 
 	public void get_percentage_changes(File directory) throws IOException
 	{
-		Process p1=Runtime.getRuntime().exec("git shortlog -sn HEAD",null,directory);
+		Process p1=Runtime.getRuntime().exec("git shortlog HEAD -s -n",null,directory);
       	InputStreamReader isr1= new InputStreamReader(p1.getInputStream());
       	BufferedReader read1=new BufferedReader(isr1);
       	String author;
@@ -268,7 +269,7 @@ public class Operations{
       		parts2=author.split("\t");
       		author=parts2[1];
       		System.out.println(author);
-      		Process p=Runtime.getRuntime().exec("git log --shortstat --oneline --author="+author,null,directory);//git log --shortstat --oneline
+      		Process p=Runtime.getRuntime().exec("git log --shortstat --oneline --author="+author,null,directory);
 	      	InputStreamReader isr= new InputStreamReader(p.getInputStream());
 	      	BufferedReader read=new BufferedReader(isr);
 	      	String result;
@@ -307,7 +308,6 @@ public class Operations{
       	}	
       	return ;
 	}
-
 }
 
 
