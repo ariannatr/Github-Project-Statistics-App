@@ -17,14 +17,6 @@ public class Operations{
 	{
 		File contents[]=directory.listFiles();
       	Integer total_num=0;
-      	/*for( File f : contents)
-      	{
-      		//System.out.println(f.getName());
-      		if(f.isDirectory())
-      			total_num+=get_files_num(f);
-      		else
-      			total_num++;
-      	}*/
     	total_files=total_num;
     	Process p=Runtime.getRuntime().exec("git ls-files ",null,directory);
       	InputStreamReader isr= new InputStreamReader(p.getInputStream());
@@ -32,45 +24,34 @@ public class Operations{
       	String result;
       	while((result=read.readLine())!=null)
       	{  
-      		System.out.println("File: "+result);
+      		//System.out.println("File: "+result);
       		total_num++;	
       	}	
-      	System.out.println("Files "+total_num);
+      	//System.out.println("Files "+total_num);
       	return total_num;
 	}
 
-	public int get_lines(File directory,String dirname,int Lines) throws IOException
+	public int get_lines(File directory,String dirname) throws IOException
 	{
-		File contents[]=directory.listFiles();
-      	Integer total_num=0;
-      	
-      	for( File f : contents)
-      	{
-      		String execute=new String("git ls-files");
-      		execute+=dirname+"/"+f.getName();
-      		//System.out.println(execute);
-      		if(f.isDirectory())
-      		{
-      			get_lines(f,dirname+"/"+f.getName(),Lines);
-      		}
-      		else
-      		{	
-      			Process p=Runtime.getRuntime().exec(execute);
-      			InputStreamReader isr= new InputStreamReader(p.getInputStream());
-      			BufferedReader read=new BufferedReader(isr);
-      			String result;
-      			if((result=read.readLine())!=null)
-      			{
-      				String res[]=result.split("\\s");
-      				//System.out.println("Exei grammes"+res[0]+"!!");
-      				Lines+=Integer.parseInt(res[0]);
-      			
-      			}	
-      			p.destroy();
-      		}
-      	}
-      	//System.out.println("Total num of lines "+Lines);
-      	return Lines;
+		Integer total_num=0;
+            Integer templines;
+      	Process p=Runtime.getRuntime().exec("git ls-files ",null,directory);
+            InputStreamReader isr= new InputStreamReader(p.getInputStream());
+            BufferedReader read=new BufferedReader(isr);
+            String result;
+            while((result=read.readLine())!=null)
+            {  
+                  String filename=new String(dirname+"/"+result);
+                 
+                  File fcontnet=new File(filename);
+                  LineNumberReader lnr=new LineNumberReader( new FileReader(fcontnet));
+                  lnr.skip(Long.MAX_VALUE);
+                  templines=lnr.getLineNumber()+1;
+                  //System.out.println(filename +" "+templines);
+                  total_num+=templines;      
+            }
+            p.destroy();  
+            return total_num;   
 	}
 
 	public int get_branches(File directory) throws IOException
@@ -138,7 +119,7 @@ public class Operations{
 				continue;  
       		System.out.println("BRANCH : "+result);
 
-      		Process created=Runtime.getRuntime().exec("git log --date=short --reverse"+result,null,directory);//
+      		Process created=Runtime.getRuntime().exec("git log --date=short --decorate=full --reverse"+result,null,directory);//
 			InputStreamReader isr3= new InputStreamReader(created.getInputStream());
       		BufferedReader read3=new BufferedReader(isr3);
       		read3.readLine();
@@ -156,21 +137,12 @@ public class Operations{
 			String result2;
 			String last_modified;
 			
-			String prev_commit;
-			int count=0;
-			while((result2=read2.readLine())!=null)
-      		{
-				prev_commit=result2;
-				if(count==2)
-				{
-					last_modified=result2;
-					String[] parts2;
-      				parts2=last_modified.split(":");
-					System.out.println("LAST MODIFIED :"+parts2[1].replaceAll(" ", ""));
-				}
-				//System.out.println(result2);
-				count++;
-      		}	
+			read2.readLine();
+			read2.readLine();
+			last_modified=read2.readLine();
+			String[] parts2;
+      		parts2=last_modified.split(":");
+			System.out.println("LAST MODIFIED :"+parts2[1].replaceAll(" ", ""));
       		p2.destroy();
 		}
 		p.destroy();
@@ -185,6 +157,17 @@ public class Operations{
 		String sumof_commits;
       	sumof_commits=read.readLine();
 		System.out.println("Sum of commits :"+sumof_commits);
+
+
+		Process analytical_commits=Runtime.getRuntime().exec("git rev-list HEAD --all --count ",null,directory);//
+		InputStreamReader com= new InputStreamReader(analytical_commits.getInputStream());
+      	BufferedReader com_read=new BufferedReader(com);
+		String sumof_analytical_commits;
+      	sumof_analytical_commits=com_read.readLine();
+		System.out.println("Sum of analytical_commits :"+sumof_analytical_commits);
+
+
+
 		Process p2=Runtime.getRuntime().exec("git shortlog -sn HEAD ",null,directory);
 		InputStreamReader isr2= new InputStreamReader(p2.getInputStream());
       	BufferedReader read2=new BufferedReader(isr2);
@@ -216,7 +199,7 @@ public class Operations{
       		BufferedReader read4=new BufferedReader(isr4);
       		String result4=read4.readLine();
       		System.out.println("Returned "+result4+" commits");
-      		float percentage=Float.parseFloat(result4)/Float.parseFloat(sumof_commits);
+      		float percentage=Float.parseFloat(result4)/Float.parseFloat(sumof_analytical_commits);
       		System.out.println(Float.toString(percentage)+"\t"+result3);
       		p4.destroy();
       	}	
@@ -259,7 +242,7 @@ public class Operations{
 
 	public void get_percentage_changes(File directory) throws IOException
 	{
-		Process p1=Runtime.getRuntime().exec("git shortlog HEAD -s -n",null,directory);
+		Process p1=Runtime.getRuntime().exec("git shortlog HEAD  -s -n",null,directory);
       	InputStreamReader isr1= new InputStreamReader(p1.getInputStream());
       	BufferedReader read1=new BufferedReader(isr1);
       	String author;
@@ -269,7 +252,10 @@ public class Operations{
       		parts2=author.split("\t");
       		author=parts2[1];
       		System.out.println(author);
-      		Process p=Runtime.getRuntime().exec("git log --shortstat --oneline --author="+author,null,directory);
+      		String executecommand;
+      		executecommand="git log --shortstat --oneline --author='"+author+"'";
+      		System.out.println("executecommand "+executecommand);
+      		Process p=Runtime.getRuntime().exec(executecommand,null,directory);//--shortstat --oneline --pretty=tformat: --numstat
 	      	InputStreamReader isr= new InputStreamReader(p.getInputStream());
 	      	BufferedReader read=new BufferedReader(isr);
 	      	String result;
@@ -277,6 +263,7 @@ public class Operations{
 	      	int deleted=0;
 	      	while((result=read.readLine())!=null)
 	      	{
+	      		//System.out.println("reeturned :"+result);
 	      		if(result.startsWith(" "))	
 	      		{
 	      			String[] parts;
@@ -302,11 +289,86 @@ public class Operations{
 	      				count++;
 	      			}
 	      		}
-	      	}	
+	      	}
 	      	System.out.println("Lines added "+added+" Lines Deleted "+deleted);
 	      	p.destroy();
       	}	
       	return ;
+	}
+
+	public void get_commit_statistics_per_author(File directory) throws IOException
+	{
+		Process p=Runtime.getRuntime().exec("git shortlog -sn HEAD ",null,directory);
+		InputStreamReader isr= new InputStreamReader(p.getInputStream());
+      	BufferedReader read=new BufferedReader(isr);
+		String result2;
+		String[] parts;
+		System.out.println("Percentage of commits per author :");
+      	while((result2=read.readLine())!=null)
+      	{
+			parts=result2.split("\t");
+			String f=parts[0].replaceAll(" ", "");
+			System.out.println(f+"\t"+parts[1]);
+
+
+			Process created=Runtime.getRuntime().exec("git log --date=short --reverse --author="+parts[1],null,directory);//first commit
+			InputStreamReader isr3= new InputStreamReader(created.getInputStream());
+      		BufferedReader read3=new BufferedReader(isr3);
+      		read3.readLine();
+      		read3.readLine();
+      		String creation=read3.readLine();
+      		if(creation==null)
+      			continue;
+      		String[] parts_created;
+      		parts_created=creation.split(":");
+      		System.out.println("CREATED :"+parts_created[1].replaceAll(" ", ""));
+      		parts_created[1]=parts_created[1].replaceAll(" ", "");
+      		String[] split_first_date=parts_created[1].split("-");
+      		created.destroy();
+
+      		String executecommand="git log --date=short --author="+parts[1];
+			Process p2=Runtime.getRuntime().exec(executecommand,null,directory);//
+			InputStreamReader isr2= new InputStreamReader(p2.getInputStream());
+      		BufferedReader read2=new BufferedReader(isr2);
+			String last_modified;
+			
+			read2.readLine();
+			read2.readLine();
+			last_modified=read2.readLine();
+			String[] parts2;
+      		parts2=last_modified.split(":");
+			System.out.println("LAST MODIFIED :"+parts2[1].replaceAll(" ", ""));
+			parts2[1]=parts2[1].replaceAll(" ", "");
+			String[] split_last_date=parts2[1].split("-");
+
+      		p2.destroy();
+      		int years=Integer.parseInt(split_last_date[0]) -Integer.parseInt(split_first_date[0]);
+      		int months=years*12 + (Integer.parseInt(split_last_date[1]) - Integer.parseInt(split_first_date[1]));
+      		int days=years*365+ (Integer.parseInt(split_last_date[1])-Integer.parseInt(split_first_date[1]))*30 + Integer.parseInt(split_last_date[2])-Integer.parseInt(split_first_date[2]);
+
+      		System.out.println("Diffrence    years :"+years+" months "+ months+" days "+ days);
+
+      		float commits_per_year;
+      		if(years==0)
+      			commits_per_year=Float.parseFloat(f);
+      		else
+      			commits_per_year=Float.parseFloat(f)/(float)years;
+      		float commits_per_month;
+      		if(months==0)
+      			commits_per_month=Float.parseFloat(f);
+      		else
+      			commits_per_month=Float.parseFloat(f)/(float)months;
+      		float commits_per_day;
+      		if(days==0)
+      			commits_per_day=Float.parseFloat(f);
+      		else
+      			commits_per_day=Float.parseFloat(f)/(float)days;
+
+      		System.out.println("Average per year :"+commits_per_year+" per month:" + commits_per_month+" per day:"+commits_per_day);
+
+		}
+		p.destroy();
+
 	}
 }
 
