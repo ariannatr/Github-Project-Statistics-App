@@ -253,19 +253,25 @@ public class Operations{
       		author=parts2[1];
       		System.out.println(author);
       		String executecommand;
-      		executecommand="git log --shortstat --oneline --author='"+author+"'";
-      		System.out.println("executecommand "+executecommand);
-      		Process p=Runtime.getRuntime().exec(executecommand,null,directory);//--shortstat --oneline --pretty=tformat: --numstat
+
+
+			String[] command={"git","log", "--shortstat","--oneline","--author="+author};
+			ProcessBuilder proBuilder=new ProcessBuilder(command);
+			proBuilder.directory(directory);
+			Process p = proBuilder.start(); 
+
 	      	InputStreamReader isr= new InputStreamReader(p.getInputStream());
 	      	BufferedReader read=new BufferedReader(isr);
 	      	String result;
 	      	int added=0;
 	      	int deleted=0;
+	      	int commits=0;
 	      	while((result=read.readLine())!=null)
 	      	{
 	      		//System.out.println("reeturned :"+result);
 	      		if(result.startsWith(" "))	
 	      		{
+	      			commits++;
 	      			String[] parts;
 	      			parts=result.split(",");
 	      			int count=0;
@@ -291,12 +297,15 @@ public class Operations{
 	      		}
 	      	}
 	      	System.out.println("Lines added "+added+" Lines Deleted "+deleted);
+	    //  	System.out.println("Average Lines add :"+(added/commits)," Average Lines Deleted :"+(deleted/commits));
+	      	int gpa=((added/commits)+(deleted/commits))/2;
+	      	System.out.println("Average of both in each commit: "+gpa);
 	      	p.destroy();
       	}	
       	return ;
 	}
 
-	public void get_commit_statistics_per_author(File directory) throws IOException
+	public void get_commit_statistics_per_author(File directory,String dirname) throws IOException
 	{
 		Process p=Runtime.getRuntime().exec("git shortlog -sn HEAD ",null,directory);
 		InputStreamReader isr= new InputStreamReader(p.getInputStream());
@@ -311,7 +320,13 @@ public class Operations{
 			System.out.println(f+"\t"+parts[1]);
 
 
-			Process created=Runtime.getRuntime().exec("git log --date=short --reverse --author="+parts[1],null,directory);//first commit
+			String[] command={"git","log", "--date=short","--reverse","--author="+parts[1]};
+			ProcessBuilder proBuilder=new ProcessBuilder(command);
+			proBuilder.directory(directory);
+			Process created = proBuilder.start(); 
+
+
+		//	Process created=Runtime.getRuntime().exec("git log --date=short --reverse --author="+parts[1],null,directory);//first commit
 			InputStreamReader isr3= new InputStreamReader(created.getInputStream());
       		BufferedReader read3=new BufferedReader(isr3);
       		read3.readLine();
@@ -326,8 +341,11 @@ public class Operations{
       		String[] split_first_date=parts_created[1].split("-");
       		created.destroy();
 
-      		String executecommand="git log --date=short --author="+parts[1];
-			Process p2=Runtime.getRuntime().exec(executecommand,null,directory);//
+
+      		String[] command2={"git","log", "--date=short","--author="+parts[1]};
+      		ProcessBuilder proBuilder2=new ProcessBuilder(command2);
+			proBuilder2.directory(directory);
+			Process p2=proBuilder2.start();
 			InputStreamReader isr2= new InputStreamReader(p2.getInputStream());
       		BufferedReader read2=new BufferedReader(isr2);
 			String last_modified;
