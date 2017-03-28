@@ -14,9 +14,10 @@ public class Main {
       	String filename=new String(args[0]);
       	File directory=new File(filename);
       	Operations op=new Operations(filename);
-        Myhtml html=new Myhtml(args[1]);
-
-      	html.print_files(op.get_files_num(directory));
+        Myhtml html=new Myhtml(args[1],filename);
+        ArrayList <String> allfiles=new ArrayList<String>(1);
+        Integer files_num=op.get_files_num(directory,allfiles);
+      	html.print_files(files_num,allfiles);
         html.print_lines(op.get_lines(directory,filename));
 	    html.print_branches_tags_commiters(op.get_branches(directory),op.get_tags(directory),op.get_commiters(directory));
         html.start_full_branches();
