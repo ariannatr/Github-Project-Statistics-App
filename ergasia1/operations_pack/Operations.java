@@ -13,18 +13,20 @@ public class Operations{
 		name=new String(filename);	
 	}
 
-	public int get_files_num(File directory) throws IOException
+	public int get_files_num(File directory,ArrayList<String> allfiles) throws IOException
 	{
-		File contents[]=directory.listFiles();
+		//File contents[]=directory.listFiles();
       	Integer total_num=0;
-    	total_files=total_num;
-    	Process p=Runtime.getRuntime().exec("git ls-files ",null,directory);
+            total_files=total_num;
+            Process p=Runtime.getRuntime().exec("git ls-files ",null,directory);
       	InputStreamReader isr= new InputStreamReader(p.getInputStream());
       	BufferedReader read=new BufferedReader(isr);
       	String result;
+
       	while((result=read.readLine())!=null)
       	{  
       		//System.out.println("File: "+result);
+                  allfiles.add(result);
       		total_num++;	
       	}	
       	//System.out.println("Files "+total_num);
@@ -113,6 +115,7 @@ public class Operations{
       	BufferedReader read=new BufferedReader(isr);
 		String result;
 		String parameter[]=new String[1];
+            Integer num=0;
       	while((result=read.readLine())!=null)
       	{
       		if(result.startsWith("*")||result.contains("->"))
@@ -145,9 +148,36 @@ public class Operations{
 			System.out.println("LAST MODIFIED :"+parts2[1].replaceAll(" ", ""));
       		p2.destroy();
 
-                  html.add_full_branches(result,parts[1].replaceAll(" ", ""),parts2[1].replaceAll(" ", ""));
+                  
+                  System.out.println("Details of each branch----");
+                  System.out.println("branch:"+result);
+                  String format;
+                  format="%h|%ad|%an|%s|tags:%d";
+                  String[] command2={"git","log","--date=short",result.replaceAll(" ", ""),"--reverse","--pretty=format:"+format};//
+                  for(String ret :command2)
+                  {     
+                        System.out.println(ret);
+                  }
+                  ProcessBuilder proBuilder2=new ProcessBuilder(command2);
+                  proBuilder2.directory(directory);
+                  Process p4=proBuilder2.start();
+                  InputStreamReader isr4= new InputStreamReader(p4.getInputStream());
+                  BufferedReader read4=new BufferedReader(isr4);
+                  String details;
+                  ArrayList <Commits_Info> cilist=new ArrayList <Commits_Info>(1);
+                  while((details=read4.readLine())!=null)
+                  {
+                        
+                        System.out.println(details);
+                        cilist.add(new Commits_Info(details));
+                  }
+
+                  html.add_full_branches(result,parts[1].replaceAll(" ", ""),parts2[1].replaceAll(" ", ""),num,cilist);
+                  num++;
 		}
 		p.destroy();
+
+
       	return ;
 	}
 
@@ -416,4 +446,40 @@ public class Operations{
 }
 
 
+class Commits_Info
+{
+      String id;
+      String author;
+      String date;
+      String message;
+      String tags;
 
+      Commits_Info(String all)
+      {
+            StringTokenizer stk=new StringTokenizer(all,"|");
+            Integer num=0;
+            while(stk.hasMoreTokens())
+            {
+                  if(num==0)
+                        this.id=new String(stk.nextToken());
+                  else if(num==1)
+                        this.date=new String(stk.nextToken());
+                  else if(num==2)
+                        this.author=new String(stk.nextToken());
+                  else if(num==3)
+                        this.message=new String(stk.nextToken());
+                  else if(num==4)
+                  {
+                        String tt=stk.nextToken();
+                        if(tt.equals("tags:"))
+                              this.tags="";
+                        else
+                              this.tags=tt.replace("tags:","");
+                  }
+                        
+                  num++;
+            }
+            
+            System.out.println(id+" "+author+" "+date+" "+tags);
+      }
+}
