@@ -416,14 +416,14 @@ public class Operations{
       		int years=Integer.parseInt(split_last_date[0]) -Integer.parseInt(split_first_date[0]);
       		int months=years*12 + (Integer.parseInt(split_last_date[1]) - Integer.parseInt(split_first_date[1]));
       		int days=years*365+ (Integer.parseInt(split_last_date[1])-Integer.parseInt(split_first_date[1]))*30 + Integer.parseInt(split_last_date[2])-Integer.parseInt(split_first_date[2]);
-
+                  int weeks=years*52+(Integer.parseInt(split_last_date[1])-Integer.parseInt(split_first_date[1]))*4;
       		System.out.println("Diffrence    years :"+years+" months "+ months+" days "+ days);
 
-      		float commits_per_year;
-      		if(years==0)
-      			commits_per_year=Float.parseFloat(f);
+      		float commits_per_week;
+      		if(weeks==0)
+      			commits_per_week=Float.parseFloat(f);
       		else
-      			commits_per_year=Float.parseFloat(f)/(float)years;
+      			commits_per_week=Float.parseFloat(f)/(float)weeks;
       		float commits_per_month;
       		if(months==0)
       			commits_per_month=Float.parseFloat(f);
@@ -435,8 +435,8 @@ public class Operations{
       		else
       			commits_per_day=Float.parseFloat(f)/(float)days;
 
-      		System.out.println("Average per year :"+commits_per_year+" per month:" + commits_per_month+" per day:"+commits_per_day);
-                  html.add_commiter_statistics(parts[1],Float.toString(commits_per_day),Float.toString(commits_per_year),Float.toString(commits_per_month));
+      		System.out.println("Average per week :"+commits_per_week+" per month:" + commits_per_month+" per day:"+commits_per_day);
+                  html.add_commiter_statistics(parts[1],Float.toString(commits_per_day),Float.toString(commits_per_week),Float.toString(commits_per_month));
 
 		}
             html.end_table();
@@ -480,6 +480,6 @@ class Commits_Info
                   num++;
             }
             
-            System.out.println(id+" "+author+" "+date+" "+tags);
+        //   System.out.println(id+" "+author+" "+date+" "+tags);
       }
 }
